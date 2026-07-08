@@ -411,8 +411,49 @@ export function Chat({ heroRef }: ChatProps) {
   }, [isDocked]);
 
   useGSAP(() => {
-    if (!isDockedRef.current || !containerRef.current || !contentRef.current) return;
+    if (!containerRef.current || !contentRef.current) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Content/icon visibility always follows isMinimized, regardless of
+    // dock state. This must NOT be gated on isDockedRef: undocking forces
+    // isMinimized back to false in the effect above, and by the time this
+    // effect re-runs for that change, isDockedRef.current is already false
+    // (set synchronously in that same prior effect) -- gating this part on
+    // "currently docked" would skip restoring the content, leaving it
+    // permanently invisible even after the container's size is later
+    // restored by useChatMorph's own scroll-driven tween.
+    if (reduced) {
+      gsap.set(contentRef.current, {
+        opacity: isMinimized ? 0 : 1,
+        pointerEvents: isMinimized ? 'none' : 'auto',
+      });
+      if (iconRef.current) {
+        gsap.set(iconRef.current, {
+          opacity: isMinimized ? 1 : 0,
+          pointerEvents: isMinimized ? 'auto' : 'none',
+        });
+      }
+    } else {
+      gsap.to(contentRef.current, {
+        opacity: isMinimized ? 0 : 1,
+        pointerEvents: isMinimized ? 'none' : 'auto',
+        duration: 0.2,
+      });
+      if (iconRef.current) {
+        gsap.to(iconRef.current, {
+          opacity: isMinimized ? 1 : 0,
+          pointerEvents: isMinimized ? 'auto' : 'none',
+          duration: 0.2,
+        });
+      }
+    }
+
+    // Resizing the container is only this effect's job while actually
+    // docked -- useChatMorph owns the container's size while transitioning
+    // to/from the hero panel, and touching it here during that transition
+    // would fight that tween.
+    if (!isDockedRef.current) return;
+
     const isMobile = window.innerWidth < 768;
     const rect = isMinimized
       ? getBottomRightRect({ width: 56, height: 56 })
@@ -427,31 +468,8 @@ export function Chat({ heroRef }: ChatProps) {
 
     if (reduced) {
       gsap.set(containerRef.current, size);
-      gsap.set(contentRef.current, {
-        opacity: isMinimized ? 0 : 1,
-        pointerEvents: isMinimized ? 'none' : 'auto',
-      });
-      if (iconRef.current) {
-        gsap.set(iconRef.current, {
-          opacity: isMinimized ? 1 : 0,
-          pointerEvents: isMinimized ? 'auto' : 'none',
-        });
-      }
-      return;
-    }
-
-    gsap.to(containerRef.current, { ...size, duration: 0.3, ease: 'power2.out' });
-    gsap.to(contentRef.current, {
-      opacity: isMinimized ? 0 : 1,
-      pointerEvents: isMinimized ? 'none' : 'auto',
-      duration: 0.2,
-    });
-    if (iconRef.current) {
-      gsap.to(iconRef.current, {
-        opacity: isMinimized ? 1 : 0,
-        pointerEvents: isMinimized ? 'auto' : 'none',
-        duration: 0.2,
-      });
+    } else {
+      gsap.to(containerRef.current, { ...size, duration: 0.3, ease: 'power2.out' });
     }
   }, { dependencies: [isMinimized] });
 
