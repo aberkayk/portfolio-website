@@ -19,6 +19,8 @@ export interface DockedSize {
   height: number;
 }
 
+const DOCK_MARGIN = 24;
+
 function getPanelRect(isMobile: boolean): Rect {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -33,6 +35,21 @@ export function getDockedSize(isMobile: boolean): DockedSize {
   const width = Math.min(vw * 0.92, 360);
   const height = isMobile ? Math.min(vh * 0.6, 420) : 480;
   return { width, height };
+}
+
+// Anchors a box of the given size to the bottom-right corner, DOCK_MARGIN from
+// each edge — used for both the docked widget and (in Task 3) the minimized
+// button, so every state stays purely numeric (top/left only, never 'auto')
+// and GSAP can smoothly tween between any two of these rects.
+export function getBottomRightRect(size: DockedSize): Rect {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return {
+    width: size.width,
+    height: size.height,
+    top: vh - size.height - DOCK_MARGIN,
+    left: vw - size.width - DOCK_MARGIN,
+  };
 }
 
 export function useChatMorph(
@@ -53,23 +70,19 @@ export function useChatMorph(
     mm.add({ isMobile: '(max-width: 767px)' }, (context) => {
       const { isMobile } = context.conditions as { isMobile: boolean };
       const panel = getPanelRect(isMobile);
-      const docked = getDockedSize(isMobile);
+      const docked = getBottomRightRect(getDockedSize(isMobile));
       const scrollEnd = isMobile ? '+=400' : '+=600';
 
       const panelStyle = {
         top: panel.top,
         left: panel.left,
-        right: 'auto',
-        bottom: 'auto',
         width: panel.width,
         height: panel.height,
         borderRadius: 24,
       };
       const dockedStyle = {
-        top: 'auto',
-        left: 'auto',
-        right: 24,
-        bottom: 24,
+        top: docked.top,
+        left: docked.left,
         width: docked.width,
         height: docked.height,
         borderRadius: 16,
@@ -115,7 +128,7 @@ export function useChatMorph(
       });
 
       if (suggestedPromptsRef.current) {
-        tl.to(suggestedPromptsRef.current, { opacity: 0, duration: 0.3 }, 0);
+        tl.to(suggestedPromptsRef.current, { opacity: 0, duration: 0.3, ease: 'none' }, 0);
       }
 
       tl.fromTo(
