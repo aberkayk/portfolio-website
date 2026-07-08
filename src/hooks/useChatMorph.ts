@@ -21,7 +21,15 @@ export interface DockedSize {
 
 const DOCK_MARGIN = 24;
 
-function getPanelRect(isMobile: boolean): Rect {
+// Exported so Chat.tsx can deterministically re-apply the correct panel
+// geometry immediately after killing a competing minimize/expand tween on
+// undock (see Chat.tsx) -- ScrollTrigger.update()/refresh() are not
+// reliable for this: if ScrollTrigger already considers the current
+// scroll position "applied" (nothing changed since its last check), a
+// forced update is a no-op and won't re-render over whatever a competing
+// tween wrote afterward. Calling this directly bypasses that caching
+// entirely.
+export function getPanelRect(isMobile: boolean): Rect {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const width = isMobile ? vw * 0.92 : Math.min(vw * 0.7, 720);

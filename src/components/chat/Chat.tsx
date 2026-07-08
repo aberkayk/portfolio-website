@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
-import { useChatMorph, getDockedSize, getBottomRightRect } from '@/hooks/useChatMorph';
+import { useChatMorph, getDockedSize, getBottomRightRect, getPanelRect } from '@/hooks/useChatMorph';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
@@ -18,6 +18,7 @@ export function Chat({ heroRef }: ChatProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLButtonElement>(null);
   const suggestedPromptsRef = useRef<HTMLDivElement>(null);
+  const minimizeTweenRef = useRef<gsap.core.Tween | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const [prevIsDocked, setPrevIsDocked] = useState(false);
   const isDockedRef = useRef(false);
@@ -35,8 +36,43 @@ export function Chat({ heroRef }: ChatProps) {
   // body guarantees it runs before useGSAP's internal one in the same
   // commit (layout effects fire in hook-call order). No setState happens
   // in this effect, so eslint's react-hooks/set-state-in-effect doesn't apply.
+  //
+  // This effect ALSO kills any in-flight minimize/expand tween the moment
+  // undocking starts, and immediately re-applies the correct panel
+  // geometry itself. Without this, a minimize tween still ticking (its
+  // 0.3s duration) when the user scrolls back up keeps overwriting the
+  // container's top/left/width/height on every remaining frame, fighting
+  // useChatMorph's own scroll-driven tween for the same properties on the
+  // same element -- once the minimize tween finishes, nothing is left
+  // driving the container, so it freezes at the minimized/docked geometry.
+  //
+  // kill() alone is not sufficient: it stops FURTHER writes from the
+  // minimize tween, but does not undo whatever value the last interleaved
+  // frame already left on the element. Tried forcing useChatMorph's own
+  // ScrollTrigger to re-render via ScrollTrigger.update() instead of
+  // setting the rect directly here -- confirmed via live reproduction
+  // that this does NOT work: if ScrollTrigger already considers the
+  // current scroll position "applied" (nothing changed since its last
+  // internal check, which the same scroll event that triggered this
+  // effect already satisfied), update() is a no-op and won't re-render
+  // over whatever the competing minimize tween wrote afterward. A genuine
+  // extra scroll event does unstick it, which is what confirmed the root
+  // cause -- but nothing guarantees the user scrolls again. Calling
+  // getPanelRect() directly and applying it here bypasses that caching
+  // entirely: at isDocked=false the scroll position is always exactly the
+  // hero-panel state (that's the only state ScrollTrigger transitions
+  // to on undock), so this is never a guess, just the same formula
+  // useChatMorph itself uses for that exact state.
   useLayoutEffect(() => {
     isDockedRef.current = isDocked;
+    if (!isDocked) {
+      minimizeTweenRef.current?.kill();
+      minimizeTweenRef.current = null;
+      if (containerRef.current) {
+        const isMobile = window.innerWidth < 768;
+        gsap.set(containerRef.current, getPanelRect(isMobile));
+      }
+    }
   }, [isDocked]);
 
   // Reset isMinimized when undocking, without a useEffect: React's
@@ -109,7 +145,11 @@ export function Chat({ heroRef }: ChatProps) {
     if (reduced) {
       gsap.set(containerRef.current, size);
     } else {
-      gsap.to(containerRef.current, { ...size, duration: 0.3, ease: 'power2.out' });
+      minimizeTweenRef.current = gsap.to(containerRef.current, {
+        ...size,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
     }
   }, { dependencies: [isMinimized] });
 
