@@ -36,8 +36,10 @@
 
 **Interfaces:**
 - Produces: `useChatMorph(heroRef: RefObject<HTMLElement | null>, containerRef: RefObject<HTMLElement | null>, suggestedPromptsRef: RefObject<HTMLElement | null>): { isDocked: boolean }` — Task 2 consumes this.
-- Produces: `getDockedSize(isMobile: boolean): { width: number; height: number }` — exported alongside the hook; Task 3's minimize/expand tween reuses it.
+- Produces: `getDockedSize(isMobile: boolean): { width: number; height: number }` and `getBottomRightRect(size: { width: number; height: number }): { top: number; left: number; width: number; height: number }` — exported alongside the hook; Task 3's minimize/expand tween reuses both.
 - Produces: `SuggestedPrompts` now accepts an optional `ref` prop (React 19 ref-as-prop, no `forwardRef`) forwarding to its root `<div>`.
+
+**Important — positioning uses `top`/`left` only, never `right`/`bottom`/`'auto'`.** An earlier draft of this hook set `panelStyle` with `top`/`left` numeric and `right: 'auto'`/`bottom: 'auto'`, then `dockedStyle` with the opposite pairing. GSAP cannot numerically interpolate a property whose "from" or "to" value is the string `'auto'` — tweening `top` from a number to `'auto'` (or `right` from `'auto'` to a number) has no parseable numeric endpoint on one side, which produces a jump/glitch instead of a smooth morph. It's also an over-constrained CSS box: setting `top`, `bottom`, and `height` all as explicit numbers simultaneously is invalid per the CSS box model (the browser silently drops one). The fix below anchors the docked/minimized states to the bottom-right corner by computing their equivalent `top`/`left` numerically (via `getBottomRightRect`), so every state — panel, docked, minimized — is expressed purely in `top`/`left`/`width`/`height`, all of them real numbers GSAP can tween cleanly between any pair.
 
 - [ ] **Step 1: Update `SuggestedPrompts.tsx` to accept a ref**
 
@@ -85,6 +87,8 @@ export interface DockedSize {
   height: number;
 }
 
+const DOCK_MARGIN = 24;
+
 function getPanelRect(isMobile: boolean): Rect {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -99,6 +103,21 @@ export function getDockedSize(isMobile: boolean): DockedSize {
   const width = Math.min(vw * 0.92, 360);
   const height = isMobile ? Math.min(vh * 0.6, 420) : 480;
   return { width, height };
+}
+
+// Anchors a box of the given size to the bottom-right corner, DOCK_MARGIN from
+// each edge — used for both the docked widget and (in Task 3) the minimized
+// button, so every state stays purely numeric (top/left only, never 'auto')
+// and GSAP can smoothly tween between any two of these rects.
+export function getBottomRightRect(size: DockedSize): Rect {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return {
+    width: size.width,
+    height: size.height,
+    top: vh - size.height - DOCK_MARGIN,
+    left: vw - size.width - DOCK_MARGIN,
+  };
 }
 
 export function useChatMorph(
@@ -119,23 +138,19 @@ export function useChatMorph(
     mm.add({ isMobile: '(max-width: 767px)' }, (context) => {
       const { isMobile } = context.conditions as { isMobile: boolean };
       const panel = getPanelRect(isMobile);
-      const docked = getDockedSize(isMobile);
+      const docked = getBottomRightRect(getDockedSize(isMobile));
       const scrollEnd = isMobile ? '+=400' : '+=600';
 
       const panelStyle = {
         top: panel.top,
         left: panel.left,
-        right: 'auto',
-        bottom: 'auto',
         width: panel.width,
         height: panel.height,
         borderRadius: 24,
       };
       const dockedStyle = {
-        top: 'auto',
-        left: 'auto',
-        right: 24,
-        bottom: 24,
+        top: docked.top,
+        left: docked.left,
         width: docked.width,
         height: docked.height,
         borderRadius: 16,
@@ -181,7 +196,7 @@ export function useChatMorph(
       });
 
       if (suggestedPromptsRef.current) {
-        tl.to(suggestedPromptsRef.current, { opacity: 0, duration: 0.3 }, 0);
+        tl.to(suggestedPromptsRef.current, { opacity: 0, duration: 0.3, ease: 'none' }, 0);
       }
 
       tl.fromTo(
@@ -355,8 +370,10 @@ EOF
 - Modify: `src/components/chat/Chat.tsx`
 
 **Interfaces:**
-- Consumes: `getDockedSize` from Task 1's `src/hooks/useChatMorph.ts`.
+- Consumes: `getDockedSize` and `getBottomRightRect` from Task 1's `src/hooks/useChatMorph.ts`.
 - Produces: `Chat` now renders a minimize button (visible only when `isDocked`) and an expand button (the collapsed 56×56 circular state) — both operate independently of `ScrollTrigger`/scroll position.
+
+**Anchoring note:** minimizing must shrink toward the *same* bottom-right corner the docked widget already occupies, not toward whatever `top`/`left` the box currently has — otherwise the collapsed button visually drifts away from the corner as it shrinks. `getBottomRightRect` (from Task 1) computes the correct `top`/`left` for any box size anchored to that corner, so the tween below animates `top`/`left`/`width`/`height` together for both the docked→minimized and minimized→docked directions.
 
 - [ ] **Step 1: Add minimize/expand state and tween to `Chat.tsx`**
 
@@ -369,7 +386,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
-import { useChatMorph, getDockedSize } from '@/hooks/useChatMorph';
+import { useChatMorph, getDockedSize, getBottomRightRect } from '@/hooks/useChatMorph';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
@@ -397,10 +414,16 @@ export function Chat({ heroRef }: ChatProps) {
     if (!isDockedRef.current || !containerRef.current || !contentRef.current) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isMobile = window.innerWidth < 768;
-    const docked = getDockedSize(isMobile);
-    const size = isMinimized
-      ? { width: 56, height: 56, borderRadius: 9999 }
-      : { width: docked.width, height: docked.height, borderRadius: 16 };
+    const rect = isMinimized
+      ? getBottomRightRect({ width: 56, height: 56 })
+      : getBottomRightRect(getDockedSize(isMobile));
+    const size = {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      borderRadius: isMinimized ? 9999 : 16,
+    };
 
     if (reduced) {
       gsap.set(containerRef.current, size);
