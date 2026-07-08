@@ -15,7 +15,8 @@ Tasks:
 - [x] Create folder structure (see CLAUDE.md component conventions)
 - [x] Set up `globals.css` with the color variables (placeholder values acceptable
       at this stage, final palette applied in Phase 5)
-- [x] Map color variables into `tailwind.config.ts`
+- [x] Map color variables into `globals.css`'s `@theme` block (Tailwind v4 is
+      config-less — no `tailwind.config.ts` in this stack, see CLAUDE.md)
 - [x] Create empty skeleton components for: Hero, Chat, ChatMessage, ChatInput,
       SuggestedPrompts, ProjectsSection, ProjectCard, ProjectModal,
       ExperienceSection, Timeline, SkillsSection
