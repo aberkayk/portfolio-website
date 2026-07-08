@@ -400,6 +400,7 @@ export function Chat({ heroRef }: ChatProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLButtonElement>(null);
   const suggestedPromptsRef = useRef<HTMLDivElement>(null);
+  const minimizeTweenRef = useRef<gsap.core.Tween | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const [prevIsDocked, setPrevIsDocked] = useState(false);
   const isDockedRef = useRef(false);
@@ -417,8 +418,22 @@ export function Chat({ heroRef }: ChatProps) {
   // body guarantees it runs before useGSAP's internal one in the same
   // commit (layout effects fire in hook-call order). No setState happens
   // in this effect, so eslint's react-hooks/set-state-in-effect doesn't apply.
+  //
+  // This effect ALSO kills any in-flight minimize/expand tween the moment
+  // undocking starts. Without this, a minimize tween still ticking (its
+  // 0.3s duration) when the user scrolls back up keeps overwriting the
+  // container's top/left/width/height on every remaining frame, fighting
+  // useChatMorph's own scroll-driven tween for the same properties on the
+  // same element -- once the minimize tween finishes, nothing is left
+  // driving the container, so it freezes at the minimized/docked geometry
+  // until an unrelated later scroll event happens to re-trigger a write.
+  // Killing it here hands that property ownership back to useChatMorph
+  // cleanly instead of leaving two independent GSAP animations racing.
   useLayoutEffect(() => {
     isDockedRef.current = isDocked;
+    if (!isDocked) {
+      minimizeTweenRef.current?.kill();
+    }
   }, [isDocked]);
 
   // Reset isMinimized when undocking, without a useEffect: React's
@@ -491,7 +506,11 @@ export function Chat({ heroRef }: ChatProps) {
     if (reduced) {
       gsap.set(containerRef.current, size);
     } else {
-      gsap.to(containerRef.current, { ...size, duration: 0.3, ease: 'power2.out' });
+      minimizeTweenRef.current = gsap.to(containerRef.current, {
+        ...size,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
     }
   }, { dependencies: [isMinimized] });
 
