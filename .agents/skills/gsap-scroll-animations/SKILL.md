@@ -40,6 +40,29 @@ Always pass `{ scope: ref }` as the second argument to `useGSAP`. It's not load-
 the two patterns below (they target refs directly, not selector strings), but it's cheap
 insurance if a child tween keyed off a class selector gets added later.
 
+## Responsive: branch by breakpoint, don't reuse desktop numbers
+
+Per `CLAUDE.md`'s responsive rule, neither pattern below may reuse the same pixel values across
+all screen sizes — a morph tuned for a 1440px hero or a stagger tuned for a 3-column desktop grid
+does not translate to a 375px phone. Use `gsap.matchMedia()` (see `gsap-core`) inside the
+`useGSAP` callback to give `md:` (768px) and up its own numbers, separate from the small-screen
+defaults:
+
+```ts
+const mm = gsap.matchMedia();
+
+mm.add(
+  { isDesktop: '(min-width: 768px)' },
+  (context) => {
+    const { isDesktop } = context.conditions as { isDesktop: boolean };
+    // build the timeline using isDesktop to pick start/end/offset values
+  },
+);
+```
+
+`matchMedia` re-runs its handler (and reverts the previous run) whenever the query flips, so it
+also covers viewport resizes and orientation changes for free — no manual resize listener needed.
+
 ## Pattern A — Morph (element changes size/position tied to scroll)
 
 Use when a single element needs to smoothly transform between two layout states as the user
@@ -65,6 +88,10 @@ Key properties:
   content must actually reflow into the widget's compact layout, not just visually scale down. Add
   `will-change: width, height, top, right, bottom` in CSS on the container to hint the browser, and
   keep an eye on frame rate during Phase 2's manual QA pass.
+* **Docked widget size must be relative, per `CLAUDE.md`** (e.g. `min(92vw, 360px)`), not a bare
+  `360`. GSAP tweens numeric values, not CSS math functions — compute the actual pixel target in
+  JS from `window.innerWidth` inside the `matchMedia` handler below (so it's recalculated on
+  resize) instead of animating a literal `"min(92vw, 360px)"` string.
 
 ```tsx
 'use client';
@@ -90,6 +117,10 @@ export function useChatMorph(
 
     gsap.set(containerRef.current, { position: 'fixed' });
 
+    // Relative, capped width per CLAUDE.md — computed here since GSAP needs a
+    // number, not a CSS min() string. Recomputed on resize by matchMedia.
+    const dockedWidth = Math.min(window.innerWidth * 0.92, 360);
+
     gsap.timeline({
       scrollTrigger: {
         trigger: heroRef.current,
@@ -98,7 +129,7 @@ export function useChatMorph(
         scrub: true,
       },
     }).to(containerRef.current, {
-      width: 360,
+      width: dockedWidth,
       height: 500,
       top: 'auto',
       bottom: 24,
@@ -129,6 +160,10 @@ Key properties:
   card index, not by animating a color property through GSAP — that would require resolving a raw
   color value at tween time and risks silently drifting from the CSS-variable system.
 * `scrub: true` so the reveal is scroll-position-driven, not a one-time trigger.
+* The `DIRECTIONS` offsets below (`x: ±220`, `y: 160`) are desktop numbers tuned for a multi-column
+  grid — per the responsive rule, scale or shrink them inside the `matchMedia` `isDesktop` branch
+  before `md:` (e.g. smaller `x`/`y` magnitudes, or drop the left/right split entirely) so cards
+  don't fly in from off-screen on a single-column mobile layout.
 
 ```tsx
 'use client';

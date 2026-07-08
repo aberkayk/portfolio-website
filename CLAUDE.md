@@ -54,6 +54,27 @@ Declaring these inside Tailwind v4's `@theme` block (rather than `:root`) makes 
 
 Usage: primary (blue) for buttons, chatbot bubbles, CTAs, links. Accent (green) for hover/active/success states and as the second alternating color in scroll reveals. Never introduce a third color into these interaction patterns — only primary and accent.
 
+### Responsive design — mobile-first, always
+
+Every section and component must work down to a 375px-wide viewport with no horizontal
+scroll, before it's considered done — not as a later pass.
+
+* **Breakpoints:** Tailwind v4's defaults only (`sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px).
+  No custom breakpoints unless a real layout need shows up. Write mobile-first: unprefixed
+  classes are the small-screen layout, `md:`/`lg:` override upward.
+* **Layout stacking:** Sections (`Hero`, `ProjectsSection`, `ExperienceSection`, `SkillsSection`)
+  stack vertically on mobile; multi-column layouts (project grid, timeline) only apply from `md:`
+  up.
+* **Scroll-linked GSAP animations (Phase 2/3) must branch by breakpoint, not reuse desktop pixel
+  values unscaled.** Use `gsap.matchMedia()` (see the `gsap-core` skill) to give small screens
+  their own `start`/`end`/offset values rather than the same fixed numbers as desktop — a morph
+  tuned for a 1440px hero or a stagger offset tuned for a 3-column grid will misbehave on a
+  360–430px phone.
+* **The docked chat widget uses relative sizing** (e.g. `min(92vw, 360px)` width), never a bare
+  fixed pixel box, so it can't overflow a small screen.
+* This applies on top of, not instead of, the `prefers-reduced-motion` fallback above — both need
+  to hold at every breakpoint.
+
 ### Component conventions
 
 * All components are TypeScript strict mode with explicit prop types.
