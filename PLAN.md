@@ -11,16 +11,16 @@ moving to the next phase.
 **Goal:** Folder structure, base config, and empty component skeletons in place.
 
 Tasks:
-- [ ] Init Next.js 16 App Router project, TypeScript, Tailwind v4, shadcn/ui
-- [ ] Create folder structure (see CLAUDE.md component conventions)
-- [ ] Set up `globals.css` with the color variables (placeholder values acceptable
+- [x] Init Next.js 16 App Router project, TypeScript, Tailwind v4, shadcn/ui
+- [x] Create folder structure (see CLAUDE.md component conventions)
+- [x] Set up `globals.css` with the color variables (placeholder values acceptable
       at this stage, final palette applied in Phase 5)
-- [ ] Map color variables into `tailwind.config.ts`
-- [ ] Create empty skeleton components for: Hero, Chat, ChatMessage, ChatInput,
+- [x] Map color variables into `tailwind.config.ts`
+- [x] Create empty skeleton components for: Hero, Chat, ChatMessage, ChatInput,
       SuggestedPrompts, ProjectsSection, ProjectCard, ProjectModal,
       ExperienceSection, Timeline, SkillsSection
-- [ ] Create `lib/chat/context.ts` and `lib/chat/anthropic.ts` as empty modules
-- [ ] Create `app/api/chat/route.ts` as an empty route handler
+- [x] Create `lib/chat/context.ts` and `lib/chat/anthropic.ts` as empty modules
+- [x] Create `app/api/chat/route.ts` as an empty route handler
 
 **Acceptance criteria:** Project builds and runs (`next dev`), all pages/components
 render without errors, no static color values anywhere in the code.
