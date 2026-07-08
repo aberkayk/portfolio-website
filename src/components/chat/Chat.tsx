@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
@@ -24,10 +24,18 @@ export function Chat({ heroRef }: ChatProps) {
 
   const { isDocked } = useChatMorph(heroRef, containerRef, suggestedPromptsRef);
 
-  // Sync the ref in a plain effect (no setState here) -- this is the
-  // sanctioned place to touch a ref for later reads elsewhere, and keeps
-  // this effect innocent of eslint's react-hooks/set-state-in-effect.
-  useEffect(() => {
+  // Keep isDockedRef fresh via useLayoutEffect, not useEffect, and declare
+  // it BEFORE the useGSAP call below. @gsap/react's useGSAP fires as a
+  // layout effect internally, and React runs ALL layout effects in a
+  // commit before any plain (useEffect) effects -- a plain useEffect here
+  // would still read stale on the exact render where isDocked and
+  // isMinimized change together (undocking while minimized), because
+  // useGSAP's own layout effect would already have fired and read the old
+  // value first. Declaring this useLayoutEffect earlier in the component
+  // body guarantees it runs before useGSAP's internal one in the same
+  // commit (layout effects fire in hook-call order). No setState happens
+  // in this effect, so eslint's react-hooks/set-state-in-effect doesn't apply.
+  useLayoutEffect(() => {
     isDockedRef.current = isDocked;
   }, [isDocked]);
 
