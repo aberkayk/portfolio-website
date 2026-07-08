@@ -67,7 +67,7 @@ export function useChatMorph(
 
     const mm = gsap.matchMedia();
 
-    mm.add({ isMobile: '(max-width: 767px)' }, (context) => {
+    mm.add({ isMobile: '(max-width: 767px)', isDesktop: '(min-width: 768px)' }, (context) => {
       const { isMobile } = context.conditions as { isMobile: boolean };
       const panel = getPanelRect(isMobile);
       const docked = getBottomRightRect(getDockedSize(isMobile));
