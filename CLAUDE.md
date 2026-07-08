@@ -22,12 +22,12 @@ These apply to every file, every component, and every prompt used in this projec
 
 ### No static colors — ever
 
-Never hardcode a color value anywhere in the codebase: no hex codes, no `rgb()`/`hsl()` literals, no default Tailwind color classes (`bg-purple-500`, `text-gray-800`, etc.) used directly in components. Every color must resolve from a CSS variable defined in `app/globals.css`, mapped through `tailwind.config.ts`, and referenced via utility classes (`bg-primary`, `text-accent`, `bg-surface-0`, etc.). This includes inline styles, SVG fills/strokes, gradient stops, and shadow colors. If a new color is ever needed, add it as a variable in `globals.css` first — never inline a raw value.
+Never hardcode a color value anywhere in the codebase: no hex codes, no `rgb()`/`hsl()` literals, no default Tailwind color classes (`bg-purple-500`, `text-gray-800`, etc.) used directly in components. Every color must resolve from a CSS variable defined in `app/globals.css`'s `@theme` block (Tailwind v4's CSS-native theming — there is no `tailwind.config.ts` in this project), and referenced via the utility classes it auto-generates (`bg-primary`, `text-accent`, `bg-surface-0`, etc.). This includes inline styles, SVG fills/strokes, gradient stops, and shadow colors. If a new color is ever needed, add it as a variable in the `@theme` block first — never inline a raw value.
 
 ### Color palette (defined in globals.css)
 
 ```css
-:root {
+@theme {
   /* primary — blue */
   --color-primary-100: #85B7EB;
   --color-primary-300: #5A9EE0;
@@ -49,6 +49,8 @@ Never hardcode a color value anywhere in the codebase: no hex codes, no `rgb()`/
   --color-border: #262E38;
 }
 ```
+
+Declaring these inside Tailwind v4's `@theme` block (rather than `:root`) makes them CSS variables *and* auto-generates matching utility classes (`bg-primary`, `text-primary-100`, `bg-surface-0`, `border-border`, ...) in one step — no separate config file needed.
 
 Usage: primary (blue) for buttons, chatbot bubbles, CTAs, links. Accent (green) for hover/active/success states and as the second alternating color in scroll reveals. Never introduce a third color into these interaction patterns — only primary and accent.
 
