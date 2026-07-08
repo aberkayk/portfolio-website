@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
@@ -19,23 +19,26 @@ export function Chat({ heroRef }: ChatProps) {
   const iconRef = useRef<HTMLButtonElement>(null);
   const suggestedPromptsRef = useRef<HTMLDivElement>(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [prevIsDocked, setPrevIsDocked] = useState(false);
   const isDockedRef = useRef(false);
-  const prevIsDockedRef = useRef(false);
 
   const { isDocked } = useChatMorph(heroRef, containerRef, suggestedPromptsRef);
 
+  // Sync the ref in a plain effect (no setState here) -- this is the
+  // sanctioned place to touch a ref for later reads elsewhere, and keeps
+  // this effect innocent of eslint's react-hooks/set-state-in-effect.
+  useEffect(() => {
+    isDockedRef.current = isDocked;
+  }, [isDocked]);
+
   // Reset isMinimized when undocking, without a useEffect: React's
   // documented "adjust state during render" pattern (see "You Might Not
-  // Need an Effect"). Guarding on prevIsDockedRef makes this fire exactly
-  // once per real isDocked change, including under StrictMode's double
-  // render. eslint's react-hooks/set-state-in-effect flagged the earlier
-  // useEffect version of this same reset.
-  // eslint-disable-next-line react-hooks/refs
-  isDockedRef.current = isDocked;
-  // eslint-disable-next-line react-hooks/refs
-  if (prevIsDockedRef.current !== isDocked) {
-    // eslint-disable-next-line react-hooks/refs
-    prevIsDockedRef.current = isDocked;
+  // Need an Effect"). Comparing against prevIsDocked -- state, not a ref;
+  // mutating a ref during render trips eslint's react-hooks/refs rule --
+  // makes this fire exactly once per real isDocked change, converging
+  // within the same render pass, including safely under StrictMode.
+  if (prevIsDocked !== isDocked) {
+    setPrevIsDocked(isDocked);
     if (!isDocked) setIsMinimized(false);
   }
 
