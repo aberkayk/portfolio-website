@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
@@ -20,13 +20,24 @@ export function Chat({ heroRef }: ChatProps) {
   const suggestedPromptsRef = useRef<HTMLDivElement>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const isDockedRef = useRef(false);
+  const prevIsDockedRef = useRef(false);
 
   const { isDocked } = useChatMorph(heroRef, containerRef, suggestedPromptsRef);
 
-  useEffect(() => {
-    isDockedRef.current = isDocked;
+  // Reset isMinimized when undocking, without a useEffect: React's
+  // documented "adjust state during render" pattern (see "You Might Not
+  // Need an Effect"). Guarding on prevIsDockedRef makes this fire exactly
+  // once per real isDocked change, including under StrictMode's double
+  // render. eslint's react-hooks/set-state-in-effect flagged the earlier
+  // useEffect version of this same reset.
+  // eslint-disable-next-line react-hooks/refs
+  isDockedRef.current = isDocked;
+  // eslint-disable-next-line react-hooks/refs
+  if (prevIsDockedRef.current !== isDocked) {
+    // eslint-disable-next-line react-hooks/refs
+    prevIsDockedRef.current = isDocked;
     if (!isDocked) setIsMinimized(false);
-  }, [isDocked]);
+  }
 
   useGSAP(() => {
     if (!containerRef.current || !contentRef.current) return;
