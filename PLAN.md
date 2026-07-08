@@ -34,14 +34,14 @@ render without errors, no static color values anywhere in the code.
 into a small fixed widget in the bottom-right corner as the user scrolls.
 
 Tasks:
-- [ ] Install `gsap`, register `ScrollTrigger`
-- [ ] Implement `useChatMorph.ts` hook (see `gsap-scroll-animations` skill,
+- [x] Install `gsap`, register `ScrollTrigger`
+- [x] Implement `useChatMorph.ts` hook (see `gsap-scroll-animations` skill,
       "morph" pattern)
-- [ ] Wire the hook into `Chat.tsx`, single component with two CSS states
-- [ ] Fade out `SuggestedPrompts` during the transition
-- [ ] Add minimize icon that appears once docked as a widget
-- [ ] Add `prefers-reduced-motion` fallback (simple fade, no size/position jump)
-- [ ] Clean up ScrollTrigger on unmount
+- [x] Wire the hook into `Chat.tsx`, single component with two CSS states
+- [x] Fade out `SuggestedPrompts` during the transition
+- [x] Add minimize icon that appears once docked as a widget
+- [x] Add `prefers-reduced-motion` fallback (simple fade, no size/position jump)
+- [x] Clean up ScrollTrigger on unmount
 
 **Acceptance criteria:** Scrolling smoothly morphs the chat box with no jank, message
 state and input persist across the transition, scrolling back up reverses the animation.
