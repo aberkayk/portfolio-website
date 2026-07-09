@@ -54,14 +54,14 @@ state and input persist across the transition, scrolling back up reverses the an
 alternating entry direction and color (primary/accent).
 
 Tasks:
-- [ ] Implement `useProjectsReveal.ts` hook (see `gsap-scroll-animations` skill,
+- [x] Implement `useProjectsReveal.ts` hook (see `gsap-scroll-animations` skill,
       "staggered reveal" pattern)
-- [ ] Wire refs from `ProjectCard` instances into the hook via `ProjectsSection`
-- [ ] Alternate entry direction (left / bottom / right) and color (primary / accent)
+- [x] Wire refs from `ProjectCard` instances into the hook via `ProjectsSection`
+- [x] Alternate entry direction (left / bottom / right) and color (primary / accent)
       per card index
-- [ ] Use `scrub: true` so scrolling back up "undeals" the cards
-- [ ] Add `prefers-reduced-motion` fallback (simple fade-in, no rotation/translation)
-- [ ] Clean up ScrollTrigger/timeline on unmount
+- [x] Use `scrub: true` so scrolling back up "undeals" the cards
+- [x] Add `prefers-reduced-motion` fallback (simple fade-in, no rotation/translation)
+- [x] Clean up ScrollTrigger/timeline on unmount
 
 **Acceptance criteria:** Cards visibly deal in with rotation + directional entry,
 staggered timing is perceptible, scroll position controls progress bidirectionally.
