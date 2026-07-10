@@ -74,14 +74,14 @@ staggered timing is perceptible, scroll position controls progress bidirectional
 system prompt built from structured personal/project data.
 
 Tasks:
-- [ ] Fill in `lib/chat/context.ts` with structured info (name, summary, skills,
+- [x] Fill in `lib/chat/context.ts` with structured info (name, summary, skills,
       projects, experience) and generate the system prompt from it
-- [ ] Implement `app/api/chat/route.ts`: Anthropic SDK, streaming response,
+- [x] Implement `app/api/chat/route.ts`: Anthropic SDK, streaming response,
       Vercel AI SDK compatible with `useChat`
-- [ ] Use Haiku model
-- [ ] Add in-memory rate limiting behind a `RateLimiter` interface
-- [ ] Return meaningful error responses (rate limit, API failure)
-- [ ] Wire `useChat` into `Chat.tsx`, render streaming messages via `ChatMessage`
+- [x] Use Haiku model
+- [x] Add in-memory rate limiting behind a `RateLimiter` interface
+- [x] Return meaningful error responses (rate limit, API failure)
+- [x] Wire `useChat` into `Chat.tsx`, render streaming messages via `ChatMessage`
 
 **Acceptance criteria:** Chatbot answers portfolio-related questions accurately,
 declines unrelated questions gracefully, rate limiting triggers correctly, streaming
