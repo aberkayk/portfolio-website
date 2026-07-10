@@ -4,10 +4,14 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MessageCircle, Minus } from 'lucide-react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useChatMorph, getDockedSize, getBottomRightRect, getPanelRect } from '@/hooks/useChatMorph';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
+
+const chatTransport = new DefaultChatTransport({ api: '/api/chat' });
 
 interface ChatProps {
   heroRef: RefObject<HTMLElement | null>;
@@ -24,6 +28,8 @@ export function Chat({ heroRef }: ChatProps) {
   const isDockedRef = useRef(false);
 
   const { isDocked } = useChatMorph(heroRef, containerRef, suggestedPromptsRef);
+  const { messages, sendMessage, status } = useChat({ transport: chatTransport });
+  const isBusy = status === 'streaming' || status === 'submitted';
 
   // Keep isDockedRef fresh via useLayoutEffect, not useEffect, and declare
   // it BEFORE the useGSAP call below. @gsap/react's useGSAP fires as a
@@ -161,9 +167,13 @@ export function Chat({ heroRef }: ChatProps) {
       className="z-50 overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-lg"
     >
       <div ref={contentRef} className="relative flex h-full flex-col">
-        <SuggestedPrompts ref={suggestedPromptsRef} />
-        <ChatMessage />
-        <ChatInput />
+        <SuggestedPrompts ref={suggestedPromptsRef} onSelect={(text) => sendMessage({ text })} />
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+          {messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+        </div>
+        <ChatInput onSend={(text) => sendMessage({ text })} disabled={isBusy} />
         {isDocked && (
           <button
             type="button"
