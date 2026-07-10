@@ -12,11 +12,24 @@ function toAnthropicMessages(messages: UIMessage[]): Anthropic.MessageParam[] {
         .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
         .map((part) => part.text)
         .join('\n'),
-    }));
+    }))
+    .filter((message) => message.content.trim().length > 0);
+}
+
+// The rate-limit key trusts the first hop of `x-forwarded-for`. This is only
+// sound behind a proxy that sets/overwrites this header (e.g. Vercel's edge
+// network) -- on a bare Node/self-hosted deployment a client can send an
+// arbitrary value and bypass the limiter. If self-hosting without a trusted
+// proxy in front, replace this with a value the platform actually controls
+// (e.g. the raw socket address) instead.
+function getClientKey(req: Request): string {
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  if (!forwardedFor) return 'unknown';
+  return forwardedFor.split(',')[0].trim();
 }
 
 export async function POST(req: Request) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = getClientKey(req);
   const { allowed, retryAfterMs } = rateLimiter.check(ip);
 
   if (!allowed) {
@@ -29,7 +42,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  let messages: UIMessage[];
+  try {
+    const body = await req.json();
+    if (!Array.isArray(body?.messages)) {
+      throw new Error('Invalid request body');
+    }
+    messages = body.messages;
+  } catch {
+    return Response.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
 
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
@@ -38,12 +60,15 @@ export async function POST(req: Request) {
       writer.write({ type: 'text-start', id: textId });
 
       try {
-        const anthropicStream = anthropic.messages.stream({
-          model: 'claude-haiku-4-5',
-          max_tokens: 1024,
-          system: buildSystemPrompt(),
-          messages: toAnthropicMessages(messages),
-        });
+        const anthropicStream = anthropic.messages.stream(
+          {
+            model: 'claude-haiku-4-5',
+            max_tokens: 1024,
+            system: buildSystemPrompt(),
+            messages: toAnthropicMessages(messages),
+          },
+          { signal: req.signal },
+        );
 
         for await (const event of anthropicStream) {
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
