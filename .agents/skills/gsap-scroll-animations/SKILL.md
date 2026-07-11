@@ -222,6 +222,63 @@ export function useProjectsReveal(
 }
 ```
 
+## Pattern C — Fade + slide-up reveal (`toggleActions`, not `scrub`)
+
+Use when a whole section should discretely fade and slide into view once, the first time
+it's scrolled into the viewport (not continuously tied to scroll position like Pattern A/B).
+Implement as `useSectionReveal.ts` per `PLAN.md` Phase 5.
+
+Key properties:
+
+* `toggleActions: 'play reverse play reverse'` (not `scrub`) — this is a discrete
+  play/reverse on enter/leave, not a scroll-position-driven scrub. Using `scrub` and
+  `toggleActions` together on the same trigger is invalid (per `gsap-scrolltrigger`'s own
+  "Do Not" list) — pick one. This pattern deliberately picks `toggleActions`.
+* Animate `opacity` and `y` (a modest translate, ~40px) together — no rotation, no scale,
+  unlike the staggered-cards pattern; this is a single-element reveal, not a group.
+* `start: 'top 85%'` triggers a bit earlier than Pattern A/B's typical `'top 80%'`, since
+  there's no morph/deal choreography to time precisely — just "become visible while mostly
+  in view."
+* Reduced-motion fallback: instant `opacity: 1`, no `y` offset at all — matching every
+  other reduced-motion branch in this project.
+
+```tsx
+'use client';
+import { type RefObject } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+export function useSectionReveal(sectionRef: RefObject<HTMLElement | null>) {
+  useGSAP(() => {
+    if (!sectionRef.current) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced) {
+      gsap.set(sectionRef.current, { opacity: 1, y: 0 });
+      return;
+    }
+
+    gsap.set(sectionRef.current, { opacity: 0, y: 40 });
+
+    gsap.to(sectionRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 85%',
+        end: 'bottom 60%',
+        toggleActions: 'play reverse play reverse',
+      },
+    });
+  }, { scope: sectionRef });
+}
+```
+
 ## Common mistakes to avoid
 
 * Don't create a separate `ScrollTrigger` per element in a staggered group — batch them into one
