@@ -4,37 +4,39 @@
 
 @theme {
   /* primary — blue */
-  --color-primary-100: #85B7EB;
-  --color-primary-300: #5A9EE0;
-  --color-primary: #378ADD;
-  --color-primary-700: #185FA5;
-  --color-primary-900: #0C447C;
+  --color-primary-100: #85b7eb;
+  --color-primary-300: #5a9ee0;
+  --color-primary: #378add;
+  --color-primary-700: #185fa5;
+  --color-primary-900: #0c447c;
 
   /* accent — green */
-  --color-accent-100: #97C459;
-  --color-accent-300: #7BAE3E;
+  --color-accent-100: #97c459;
+  --color-accent-300: #7bae3e;
   --color-accent: #639922;
-  --color-accent-700: #3B6D11;
-  --color-accent-900: #27500A;
+  --color-accent-700: #3b6d11;
+  --color-accent-900: #27500a;
 
   /* surfaces — dark, slightly blue-tinted neutral */
-  --color-surface-0: #0B0F14;
+  --color-surface-0: #0b0f14;
   --color-surface-1: #131920;
-  --color-surface-2: #1B222B;
-  --color-border: #262E38;
+  --color-surface-2: #1b222b;
+  --color-border: #262e38;
 
   /* muted text */
-  --color-muted-text: #7A8899;
+  --color-muted-text: #7a8899;
 
   --font-heading: var(--font-heading-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body-sans), ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-glow-primary: 0 0 24px 4px color-mix(in oklab, var(--color-primary) 45%, transparent);
-  --shadow-glow-accent: 0 0 24px 4px color-mix(in oklab, var(--color-accent) 45%, transparent);
+  --shadow-glow-primary: 0 0 24px 4px
+    color-mix(in oklab, var(--color-primary) 45%, transparent);
+  --shadow-glow-accent: 0 0 24px 4px
+    color-mix(in oklab, var(--color-accent) 45%, transparent);
 
   /* shadcn semantic tokens, derived from the palette above */
   --color-background: var(--color-surface-0);
-  --color-foreground: #E7ECF2;
+  --color-foreground: #e7ecf2;
   --color-card: var(--color-surface-1);
   --color-card-foreground: var(--color-foreground);
   --color-popover: var(--color-surface-1);
@@ -43,9 +45,9 @@
   --color-secondary: var(--color-surface-2);
   --color-secondary-foreground: var(--color-foreground);
   --color-muted: var(--color-surface-2);
-  --color-muted-foreground: #93A0AD;
+  --color-muted-foreground: #93a0ad;
   --color-accent-foreground: var(--color-surface-0);
-  --color-destructive: #C4453A;
+  --color-destructive: #c4453a;
   --color-destructive-foreground: var(--color-surface-0);
   --color-input: var(--color-border);
   --color-ring: var(--color-primary);
@@ -61,36 +63,69 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground font-sans;
+    overflow-x: hidden;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading;
   }
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 0; }
+::-webkit-scrollbar {
+  width: 0;
+}
 
 /* ── Animations ── */
 @keyframes hero-mesh {
-  0%, 100% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
 }
 
 @keyframes bounce-dot {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-6px); }
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .animate-hero-mesh {
@@ -115,7 +150,7 @@
   transition: color 0.2s ease;
 }
 .nav-link::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -124,8 +159,12 @@
   background: var(--color-primary);
   transition: width 0.25s ease;
 }
-.nav-link:hover::after { width: 100%; }
-.nav-link:hover { color: var(--color-primary); }
+.nav-link:hover::after {
+  width: 100%;
+}
+.nav-link:hover {
+  color: var(--color-primary);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-mesh,

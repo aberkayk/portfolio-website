@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, type RefObject } from 'react';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useState, type RefObject } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -63,90 +63,105 @@ export function getBottomRightRect(size: DockedSize): Rect {
 export function useChatMorph(
   heroRef: RefObject<HTMLElement | null>,
   containerRef: RefObject<HTMLElement | null>,
-  suggestedPromptsRef: RefObject<HTMLElement | null>,
+  suggestedPromptsRef: RefObject<HTMLElement | null>
 ) {
   const [isDocked, setIsDocked] = useState(false);
 
-  useGSAP(() => {
-    if (!heroRef.current || !containerRef.current) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useGSAP(
+    () => {
+      if (!heroRef.current || !containerRef.current) return;
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
 
-    gsap.set(containerRef.current, { position: 'fixed' });
+      gsap.set(containerRef.current, { position: "fixed" });
 
-    const mm = gsap.matchMedia();
+      const mm = gsap.matchMedia();
 
-    mm.add({ isMobile: '(max-width: 767px)', isDesktop: '(min-width: 768px)' }, (context) => {
-      const { isMobile } = context.conditions as { isMobile: boolean };
-      const panel = getPanelRect(isMobile);
-      const docked = getBottomRightRect(getDockedSize(isMobile));
-      const scrollEnd = isMobile ? '+=400' : '+=600';
+      mm.add(
+        { isMobile: "(max-width: 767px)", isDesktop: "(min-width: 768px)" },
+        (context) => {
+          const { isMobile } = context.conditions as { isMobile: boolean };
+          const panel = getPanelRect(isMobile);
+          const docked = getBottomRightRect(getDockedSize(isMobile));
+          const scrollEnd = isMobile ? "+=300" : "+=200";
 
-      const panelStyle = {
-        top: panel.top,
-        left: panel.left,
-        width: panel.width,
-        height: panel.height,
-        borderRadius: 24,
-      };
-      const dockedStyle = {
-        top: docked.top,
-        left: docked.left,
-        width: docked.width,
-        height: docked.height,
-        borderRadius: 16,
-      };
+          const panelStyle = {
+            top: panel.top,
+            left: panel.left,
+            width: panel.width,
+            height: panel.height,
+            borderRadius: 24,
+          };
+          const dockedStyle = {
+            top: docked.top,
+            left: docked.left,
+            width: docked.width,
+            height: docked.height,
+            borderRadius: 16,
+          };
 
-      gsap.set(containerRef.current, panelStyle);
+          gsap.set(containerRef.current, panelStyle);
 
-      if (reduced) {
-        let wasDocked = false;
-        ScrollTrigger.create({
-          trigger: heroRef.current,
-          start: 'top top',
-          end: scrollEnd,
-          onUpdate: (self) => {
-            const shouldDock = self.progress >= 0.5;
-            if (shouldDock === wasDocked) return;
-            wasDocked = shouldDock;
-            setIsDocked(shouldDock);
-            gsap
-              .timeline()
-              .to(containerRef.current, { opacity: 0, duration: 0.15 })
-              .set(containerRef.current, shouldDock ? dockedStyle : panelStyle)
-              .to(containerRef.current, { opacity: 1, duration: 0.15 });
-          },
-        });
-        return;
-      }
+          if (reduced) {
+            let wasDocked = false;
+            ScrollTrigger.create({
+              trigger: heroRef.current,
+              start: "top top",
+              end: scrollEnd,
+              onUpdate: (self) => {
+                const shouldDock = self.progress >= 0.5;
+                if (shouldDock === wasDocked) return;
+                wasDocked = shouldDock;
+                setIsDocked(shouldDock);
+                gsap
+                  .timeline()
+                  .to(containerRef.current, { opacity: 0, duration: 0.15 })
+                  .set(
+                    containerRef.current,
+                    shouldDock ? dockedStyle : panelStyle
+                  )
+                  .to(containerRef.current, { opacity: 1, duration: 0.15 });
+              },
+            });
+            return;
+          }
 
-      let wasDocked = false;
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: heroRef.current,
-          start: 'top top',
-          end: scrollEnd,
-          scrub: true,
-          onUpdate: (self) => {
-            const shouldDock = self.progress >= 0.999;
-            if (shouldDock === wasDocked) return;
-            wasDocked = shouldDock;
-            setIsDocked(shouldDock);
-          },
-        },
-      });
+          let wasDocked = false;
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: heroRef.current,
+              start: "top top",
+              end: scrollEnd,
+              scrub: true,
+              onUpdate: (self) => {
+                const shouldDock = self.progress >= 0.999;
+                if (shouldDock === wasDocked) return;
+                wasDocked = shouldDock;
+                setIsDocked(shouldDock);
+              },
+            },
+          });
 
-      if (suggestedPromptsRef.current) {
-        tl.to(suggestedPromptsRef.current, { opacity: 0, duration: 0.3, ease: 'none' }, 0);
-      }
+          if (suggestedPromptsRef.current) {
+            tl.to(
+              suggestedPromptsRef.current,
+              { opacity: 0, duration: 0.3, ease: "none" },
+              0
+            );
+          }
 
-      tl.fromTo(
-        containerRef.current,
-        panelStyle,
-        { ...dockedStyle, ease: 'none', duration: 1 },
-        0,
+          tl.fromTo(
+            containerRef.current,
+            panelStyle,
+            { ...dockedStyle, ease: "none", duration: 1 },
+            0
+          );
+        }
       );
-    });
-  }, { scope: containerRef });
+    },
+    { scope: containerRef }
+  );
 
   return { isDocked };
 }
