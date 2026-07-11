@@ -10,17 +10,35 @@ export function ChatMessage({ message }: ChatMessageProps) {
     .map((part) => part.text)
     .join('');
 
+  const isUser = message.role === 'user';
+
   return (
     <div
       data-component="ChatMessage"
       data-role={message.role}
-      className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
-        message.role === 'user'
-          ? 'self-end bg-primary text-primary-foreground'
-          : 'self-start bg-surface-2 text-foreground'
-      }`}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
     >
-      {text}
+      <div
+        className="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed"
+        style={
+          isUser
+            ? {
+                background: 'var(--color-primary)',
+                color: '#fff',
+                borderRadius: '16px',
+                borderBottomRightRadius: '4px',
+              }
+            : {
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-foreground)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '16px',
+                borderBottomLeftRadius: '4px',
+              }
+        }
+      >
+        {text}
+      </div>
     </div>
   );
 }

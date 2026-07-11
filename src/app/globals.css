@@ -23,6 +23,9 @@
   --color-surface-2: #1B222B;
   --color-border: #262E38;
 
+  /* muted text */
+  --color-muted-text: #7A8899;
+
   --font-heading: var(--font-heading-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body-sans), ui-sans-serif, system-ui, sans-serif;
 
@@ -66,22 +69,69 @@
   }
 }
 
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 0; }
+
+/* ── Animations ── */
 @keyframes hero-mesh {
-  0%,
-  100% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+@keyframes bounce-dot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
 .animate-hero-mesh {
   animation: hero-mesh 45s ease-in-out infinite;
 }
 
+.animate-bounce-dot {
+  animation: bounce-dot 1.2s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease both;
+}
+
+/* ── Nav link underline effect ── */
+.nav-link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-primary);
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after { width: 100%; }
+.nav-link:hover { color: var(--color-primary); }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-hero-mesh {
+  .animate-hero-mesh,
+  .animate-bounce-dot,
+  .animate-pulse-dot,
+  .animate-fade-up {
     animation: none;
   }
 }

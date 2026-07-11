@@ -9,7 +9,11 @@ export interface ProjectEntry {
   name: string;
   description: string;
   technologies: string[];
+  link: string;
+  accent: 'blue' | 'green';
+  year: string;
 }
+
 
 export interface OwnerContext {
   name: string;
@@ -129,7 +133,63 @@ export const OWNER_CONTEXT: OwnerContext = {
     period: '2015 -- 2020',
     degree: 'Bachelor of Engineering -- Mechanical Engineering (English)',
   },
-  projects: [],
+  projects: [
+    {
+      name: 'Macbook Landing Page',
+      description:
+        'Apple MacBook Pro landing page with 3D WebGL model and GSAP scroll-driven animations — smooth camera path, realistic lighting, and cinematic reveal sequence.',
+      technologies: ['Three.js', 'GSAP', 'JavaScript', 'HTML/CSS'],
+      link: 'https://github.com/aberkayk/macbook-landing-page-gsap',
+      accent: 'blue',
+      year: '2026',
+    },
+    {
+      name: 'Conflict Economics',
+      description:
+        'Data visualisation platform exploring the economic dimensions of global conflicts. Interactive charts and filterable datasets built with TypeScript and modern frontend tooling.',
+      technologies: ['TypeScript', 'Next.js', 'Recharts'],
+      link: 'https://github.com/aberkayk/conflict-ecomonics',
+      accent: 'green',
+      year: '2026',
+    },
+    {
+      name: 'Cakeday Mono',
+      description:
+        'Full-stack monorepo SaaS for birthday & celebration reminders. Multi-tenant API, scheduled notifications, and a polished React dashboard — built from scratch.',
+      technologies: ['TypeScript', 'Next.js', 'Node.js', 'MongoDB'],
+      link: 'https://github.com/aberkayk/cakeday-mono',
+      accent: 'blue',
+      year: '2026',
+    },
+    {
+      name: 'AI Resume Analyzer',
+      description:
+        'AI-powered resume parsing and scoring tool. Extracts structured data from PDFs, scores candidates against job descriptions, and generates improvement suggestions.',
+      technologies: ['JavaScript', 'OpenAI API', 'Node.js'],
+      link: 'https://github.com/aberkayk/ai-resume-analyzer',
+      accent: 'green',
+      year: '2025',
+    },
+    {
+      name: 'Real Estate App',
+      description:
+        'Property listing platform with advanced search & filtering, map integration, and a responsive TypeScript frontend connected to a REST API backend.',
+      technologies: ['TypeScript', 'React', 'Tailwind CSS', 'REST'],
+      link: 'https://github.com/aberkayk/real-estate-app',
+      accent: 'blue',
+      year: '2025',
+    },
+    {
+      name: 'Movie WebApp',
+      description:
+        'Feature-rich movie discovery app powered by TMDB RestAPI. Browse trending films, search by genre, view cast details, and manage a personal watchlist.',
+      technologies: ['React', 'JavaScript', 'REST API', 'CSS3'],
+      link: 'https://github.com/aberkayk/Movie-WebApp-RestAPI-ReactJS',
+      accent: 'green',
+      year: '2025',
+    },
+  ],
+
   contact: {
     email: 'aberkayk@gmail.com',
     phone: '+90 506 669 57 96',

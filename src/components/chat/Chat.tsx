@@ -31,44 +31,7 @@ export function Chat({ heroRef }: ChatProps) {
   const { messages, sendMessage, status } = useChat({ transport: chatTransport });
   const isBusy = status === 'streaming' || status === 'submitted';
 
-  // Keep isDockedRef fresh via useLayoutEffect, not useEffect, and declare
-  // it BEFORE the useGSAP call below. @gsap/react's useGSAP fires as a
-  // layout effect internally, and React runs ALL layout effects in a
-  // commit before any plain (useEffect) effects -- a plain useEffect here
-  // would still read stale on the exact render where isDocked and
-  // isMinimized change together (undocking while minimized), because
-  // useGSAP's own layout effect would already have fired and read the old
-  // value first. Declaring this useLayoutEffect earlier in the component
-  // body guarantees it runs before useGSAP's internal one in the same
-  // commit (layout effects fire in hook-call order). No setState happens
-  // in this effect, so eslint's react-hooks/set-state-in-effect doesn't apply.
-  //
-  // This effect ALSO kills any in-flight minimize/expand tween the moment
-  // undocking starts, and immediately re-applies the correct panel
-  // geometry itself. Without this, a minimize tween still ticking (its
-  // 0.3s duration) when the user scrolls back up keeps overwriting the
-  // container's top/left/width/height on every remaining frame, fighting
-  // useChatMorph's own scroll-driven tween for the same properties on the
-  // same element -- once the minimize tween finishes, nothing is left
-  // driving the container, so it freezes at the minimized/docked geometry.
-  //
-  // kill() alone is not sufficient: it stops FURTHER writes from the
-  // minimize tween, but does not undo whatever value the last interleaved
-  // frame already left on the element. Tried forcing useChatMorph's own
-  // ScrollTrigger to re-render via ScrollTrigger.update() instead of
-  // setting the rect directly here -- confirmed via live reproduction
-  // that this does NOT work: if ScrollTrigger already considers the
-  // current scroll position "applied" (nothing changed since its last
-  // internal check, which the same scroll event that triggered this
-  // effect already satisfied), update() is a no-op and won't re-render
-  // over whatever the competing minimize tween wrote afterward. A genuine
-  // extra scroll event does unstick it, which is what confirmed the root
-  // cause -- but nothing guarantees the user scrolls again. Calling
-  // getPanelRect() directly and applying it here bypasses that caching
-  // entirely: at isDocked=false the scroll position is always exactly the
-  // hero-panel state (that's the only state ScrollTrigger transitions
-  // to on undock), so this is never a guess, just the same formula
-  // useChatMorph itself uses for that exact state.
+  // Keep isDockedRef fresh via useLayoutEffect (must run before useGSAP's own layout effect)
   useLayoutEffect(() => {
     isDockedRef.current = isDocked;
     if (!isDocked) {
@@ -81,12 +44,7 @@ export function Chat({ heroRef }: ChatProps) {
     }
   }, [isDocked]);
 
-  // Reset isMinimized when undocking, without a useEffect: React's
-  // documented "adjust state during render" pattern (see "You Might Not
-  // Need an Effect"). Comparing against prevIsDocked -- state, not a ref;
-  // mutating a ref during render trips eslint's react-hooks/refs rule --
-  // makes this fire exactly once per real isDocked change, converging
-  // within the same render pass, including safely under StrictMode.
+  // Reset isMinimized when undocking (render-phase state adjustment)
   if (prevIsDocked !== isDocked) {
     setPrevIsDocked(isDocked);
     if (!isDocked) setIsMinimized(false);
@@ -96,14 +54,6 @@ export function Chat({ heroRef }: ChatProps) {
     if (!containerRef.current || !contentRef.current) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Content/icon visibility always follows isMinimized, regardless of
-    // dock state. This must NOT be gated on isDockedRef: undocking forces
-    // isMinimized back to false in the effect above, and by the time this
-    // effect re-runs for that change, isDockedRef.current is already false
-    // (set synchronously in that same prior effect) -- gating this part on
-    // "currently docked" would skip restoring the content, leaving it
-    // permanently invisible even after the container's size is later
-    // restored by useChatMorph's own scroll-driven tween.
     if (reduced) {
       gsap.set(contentRef.current, {
         opacity: isMinimized ? 0 : 1,
@@ -130,10 +80,6 @@ export function Chat({ heroRef }: ChatProps) {
       }
     }
 
-    // Resizing the container is only this effect's job while actually
-    // docked -- useChatMorph owns the container's size while transitioning
-    // to/from the hero panel, and touching it here during that transition
-    // would fight that tween.
     if (!isDockedRef.current) return;
 
     const isMobile = window.innerWidth < 768;
@@ -164,29 +110,72 @@ export function Chat({ heroRef }: ChatProps) {
       ref={containerRef}
       data-component="Chat"
       data-docked={isDocked}
-      className={`z-50 overflow-hidden rounded-2xl border border-border bg-surface-1 ${
-        isDocked ? 'shadow-glow-primary' : 'shadow-lg'
-      }`}
+      className={`z-50 overflow-hidden ${isDocked ? 'shadow-glow-primary' : 'shadow-lg'}`}
+      style={{
+        background: 'var(--color-surface-1)',
+        border: '1px solid var(--color-border)',
+        boxShadow: isDocked
+          ? undefined
+          : '0 0 40px rgba(55,138,221,0.15), 0 20px 60px rgba(0,0,0,0.5)',
+      }}
     >
       <div ref={contentRef} className="relative flex h-full flex-col">
+        {/* ── Chat header ── */}
+        <div
+          className="flex items-center gap-3 px-5 py-4 shrink-0"
+          style={{
+            background: 'rgba(11,15,20,0.6)',
+            borderBottom: '1px solid var(--color-border)',
+          }}
+        >
+          {/* Avatar */}
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold font-heading shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-700))',
+              color: '#fff',
+            }}
+          >
+            ABK
+          </div>
+          <div>
+            <div className="text-sm font-semibold font-heading text-foreground">
+              Chat with ABK&apos;s AI
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
+              <span className="text-xs text-muted-foreground">Online now</span>
+            </div>
+          </div>
+
+          {/* Minimize button (only when docked) */}
+          {isDocked && (
+            <button
+              type="button"
+              aria-label="Minimize chat"
+              onClick={() => setIsMinimized(true)}
+              className="ml-auto text-muted-foreground hover:text-foreground transition-colors duration-200"
+            >
+              <Minus className="size-4" />
+            </button>
+          )}
+        </div>
+
+        {/* ── Suggested prompts (fades out on scroll) ── */}
         <SuggestedPrompts ref={suggestedPromptsRef} onSelect={(text) => sendMessage({ text })} />
-        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+
+        {/* ── Messages ── */}
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
         </div>
+
+        {/* ── Input ── */}
         <ChatInput onSend={(text) => sendMessage({ text })} disabled={isBusy} />
-        {isDocked && (
-          <button
-            type="button"
-            aria-label="Minimize chat"
-            onClick={() => setIsMinimized(true)}
-            className="absolute right-2 top-2 text-muted-foreground"
-          >
-            <Minus className="size-4" />
-          </button>
-        )}
       </div>
+
+      {/* Expand button shown when minimized (docked only) */}
       {isDocked && (
         <button
           ref={iconRef}

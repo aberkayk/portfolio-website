@@ -11,12 +11,13 @@ export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
 
   return (
-    <main>
+    <>
       <Hero ref={heroRef} />
+      {/* Chat is positioned fixed by GSAP — starts centered in hero, morphs to bottom-right widget on scroll */}
       <Chat heroRef={heroRef} />
       <ProjectsSection />
       <ExperienceSection />
       <SkillsSection />
-    </main>
+    </>
   );
 }

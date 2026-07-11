@@ -11,11 +11,24 @@ export function ExperienceSection() {
   return (
     <section
       ref={sectionRef}
+      id="experience"
       data-component="ExperienceSection"
-      className="flex flex-col gap-8 px-6 py-16"
+      className="py-20 px-6"
     >
-      <h2 className="text-3xl">Experience</h2>
-      <Timeline />
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-12">
+          <div
+            className="text-xs font-mono mb-2 tracking-widest"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            CAREER HISTORY
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold font-heading text-foreground">
+            Experience
+          </h2>
+        </div>
+        <Timeline />
+      </div>
     </section>
   );
 }

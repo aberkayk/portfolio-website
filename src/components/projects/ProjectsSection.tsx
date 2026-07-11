@@ -1,17 +1,10 @@
 'use client';
 
 import { useRef } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { useProjectsReveal } from '@/hooks/useProjectsReveal';
-
-const PROJECTS = [
-  { id: '1', title: 'Project 1' },
-  { id: '2', title: 'Project 2' },
-  { id: '3', title: 'Project 3' },
-  { id: '4', title: 'Project 4' },
-  { id: '5', title: 'Project 5' },
-  { id: '6', title: 'Project 6' },
-];
+import { OWNER_CONTEXT } from '@/lib/chat/context';
 
 export function ProjectsSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -22,21 +15,47 @@ export function ProjectsSection() {
   return (
     <section
       ref={sectionRef}
+      id="projects"
       data-component="ProjectsSection"
-      className="grid grid-cols-1 gap-6 md:grid-cols-3"
+      className="py-20 px-6"
     >
-      {PROJECTS.map((project, index) => (
-        <ProjectCard
-          key={project.id}
-          ref={(el) => {
-            if (el) {
-              cardRefs.current[index] = el;
-            }
-          }}
-          title={project.title}
-          colorVariant={index % 2 === 0 ? 'primary' : 'accent'}
-        />
-      ))}
+      <div className="max-w-6xl mx-auto">
+        {/* Section header */}
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <div
+              className="text-xs font-mono mb-2 tracking-widest"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              SELECTED WORK
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-foreground">
+              Projects
+            </h2>
+          </div>
+          <a
+            href="https://github.com/aberkayk"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+          >
+            View all on GitHub <ChevronRight size={14} />
+          </a>
+        </div>
+
+        {/* Cards grid — 2 columns on desktop, 1 on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {OWNER_CONTEXT.projects.map((project, index) => (
+            <ProjectCard
+              key={project.name}
+              ref={(el) => {
+                if (el) cardRefs.current[index] = el;
+              }}
+              project={project}
+            />
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
