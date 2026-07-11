@@ -17,8 +17,8 @@ export function useCardTilt(cardRef: RefObject<HTMLElement | null>) {
 
     gsap.set(card, { transformPerspective: 800 });
 
-    const setRotateX = gsap.quickTo(card, 'rotateX', { duration: 0.4, ease: 'power3.out' });
-    const setRotateY = gsap.quickTo(card, 'rotateY', { duration: 0.4, ease: 'power3.out' });
+    const setRotateX = gsap.quickTo(card, 'rotationX', { duration: 0.4, ease: 'power3.out' });
+    const setRotateY = gsap.quickTo(card, 'rotationY', { duration: 0.4, ease: 'power3.out' });
 
     function handleMouseMove(event: MouseEvent) {
       const rect = card!.getBoundingClientRect();
