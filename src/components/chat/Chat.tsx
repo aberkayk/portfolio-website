@@ -164,7 +164,9 @@ export function Chat({ heroRef }: ChatProps) {
       ref={containerRef}
       data-component="Chat"
       data-docked={isDocked}
-      className="z-50 overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-lg"
+      className={`z-50 overflow-hidden rounded-2xl border border-border bg-surface-1 ${
+        isDocked ? 'shadow-glow-primary' : 'shadow-lg'
+      }`}
     >
       <div ref={contentRef} className="relative flex h-full flex-col">
         <SuggestedPrompts ref={suggestedPromptsRef} onSelect={(text) => sendMessage({ text })} />

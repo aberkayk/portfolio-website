@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
+import { useSpringPress } from '@/hooks/useSpringPress';
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -9,6 +10,8 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [value, setValue] = useState('');
+  const sendButtonRef = useRef<HTMLButtonElement>(null);
+  useSpringPress(sendButtonRef);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,9 +36,10 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         className="flex-1 rounded-full border border-border bg-surface-2 px-4 py-2 text-sm text-foreground outline-none disabled:opacity-50"
       />
       <button
+        ref={sendButtonRef}
         type="submit"
         disabled={disabled || !value.trim()}
-        className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+        className="rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground shadow-glow-primary disabled:opacity-50 disabled:shadow-none"
       >
         Send
       </button>
