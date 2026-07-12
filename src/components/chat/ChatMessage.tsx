@@ -19,12 +19,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       <div
-        className="max-w-[80%] px-4 py-2.5 text-sm leading-relaxed"
+        className="max-w-[80%] whitespace-pre-wrap px-4 py-2.5 text-sm leading-relaxed"
         style={
           isUser
             ? {
                 background: 'var(--color-primary)',
-                color: '#fff',
+                color: 'var(--color-primary-foreground)',
                 borderRadius: '16px',
                 borderBottomRightRadius: '4px',
               }

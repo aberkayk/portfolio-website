@@ -1,80 +1,70 @@
-'use client';
+"use client";
 
-import { type RefObject } from 'react';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { type RefObject, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-interface DirectionOffset {
-  x: number;
-  y: number;
-  rotation: number;
-}
+const SLIDE_DISTANCE = 80;
 
-// Desktop numbers, tuned for a 3-column grid: index % 3 equals the card's
-// actual column (0 = left, 1 = middle, 2 = right), so the direction cycle
-// and the visual layout agree by construction, not by coincidence.
-const DESKTOP_DIRECTIONS: DirectionOffset[] = [
-  { x: -220, y: 0, rotation: -18 },
-  { x: 0, y: 160, rotation: 18 },
-  { x: 220, y: 0, rotation: -18 },
-];
-
-// Mobile is a single column -- there is no "left/middle/right" to enter
-// from, and the desktop x offsets (+-220px) would fly cards in from off
-// the edge of a ~375px viewport. Drop the horizontal split entirely and
-// just alternate rotation direction by parity for a little variety.
-function getMobileDirection(index: number): DirectionOffset {
-  return { x: 0, y: 80, rotation: index % 2 === 0 ? -8 : 8 };
-}
-
+/**
+ * Reveals project cards as they scroll into view, alternating entrance
+ * direction by index -- even cards slide in from the left, odd cards from
+ * the right. Each card gets its own ScrollTrigger (rather than one trigger
+ * animating the whole set) so a 2-column grid reveals row by row as the
+ * user scrolls, not all at once.
+ *
+ * `count` is the number of cards currently rendered -- pass the (possibly
+ * growing, e.g. after a "Load more" click) project count so newly-mounted
+ * cards get the same reveal treatment. Already-revealed cards are tracked
+ * in `revealedRef` (persists across re-runs since it's a ref, and React
+ * reuses the same DOM nodes for unchanged keys) so a dependency change
+ * doesn't re-hide/re-animate cards that are already on screen.
+ */
 export function useProjectsReveal(
   sectionRef: RefObject<HTMLElement | null>,
-  cardRefs: RefObject<HTMLElement[]>,
+  count: number
 ) {
-  useGSAP(() => {
-    const cards = cardRefs.current;
-    if (!sectionRef.current || !cards.length) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const revealedRef = useRef<Set<Element>>(new Set());
 
-    if (reduced) {
-      gsap.set(cards, { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1 });
-      return;
-    }
+  useGSAP(
+    () => {
+      if (!sectionRef.current) return;
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
 
-    const mm = gsap.matchMedia();
+      const cards = sectionRef.current.querySelectorAll(
+        '[data-component="ProjectCard"]'
+      );
+      if (!cards.length) return;
 
-    mm.add({ isMobile: '(max-width: 767px)', isDesktop: '(min-width: 768px)' }, (context) => {
-      const { isMobile } = context.conditions as { isMobile: boolean };
-      const getOffset = (i: number) =>
-        isMobile ? getMobileDirection(i) : DESKTOP_DIRECTIONS[i % DESKTOP_DIRECTIONS.length];
+      if (reduced) {
+        gsap.set(cards, { opacity: 1, x: 0 });
+        return;
+      }
 
-      gsap.set(cards, {
-        x: (i) => getOffset(i).x,
-        y: (i) => getOffset(i).y,
-        rotation: (i) => getOffset(i).rotation,
-        opacity: 0,
-        scale: 0.85,
+      cards.forEach((card, i) => {
+        if (revealedRef.current.has(card)) return;
+        revealedRef.current.add(card);
+
+        const fromX = i % 2 === 0 ? -SLIDE_DISTANCE : SLIDE_DISTANCE;
+        gsap.set(card, { opacity: 0, x: fromX });
+        gsap.to(card, {
+          opacity: 1,
+          x: 0,
+          duration: 0.6,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 85%",
+            toggleActions: "play none none none",
+          },
+        });
       });
-
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 80%',
-          end: 'bottom 60%',
-          scrub: true,
-        },
-      }).to(cards, {
-        x: 0,
-        y: 0,
-        rotation: 0,
-        opacity: 1,
-        scale: 1,
-        ease: 'power3.out',
-        stagger: 0.15,
-      });
-    });
-  }, { scope: sectionRef });
+    },
+    { scope: sectionRef, dependencies: [count] }
+  );
 }

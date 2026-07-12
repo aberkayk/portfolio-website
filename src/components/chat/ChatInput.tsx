@@ -7,9 +7,17 @@ import { useSpringPress } from '@/hooks/useSpringPress';
 interface ChatInputProps {
   onSend: (text: string) => void;
   disabled: boolean;
+  placeholder?: string;
+  /** Shown as a native tooltip on hover, e.g. "Only active in Chrome". */
+  disabledReason?: string;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  disabled,
+  placeholder = 'Ask me anything...',
+  disabledReason,
+}: ChatInputProps) {
   const [value, setValue] = useState('');
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   useSpringPress(sendButtonRef);
@@ -26,6 +34,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     <form
       data-component="ChatInput"
       onSubmit={handleSubmit}
+      title={disabled ? disabledReason : undefined}
       className="flex items-center gap-3 mx-3 mb-3 px-4 py-2.5 rounded-[14px]"
       style={{
         background: 'var(--color-surface-2)',
@@ -37,7 +46,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         disabled={disabled}
-        placeholder="Ask me anything..."
+        placeholder={placeholder}
         className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50"
       />
       <button
@@ -54,7 +63,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           (e.currentTarget as HTMLButtonElement).style.filter = '';
         }}
       >
-        <Send size={14} color="#fff" />
+        <Send size={14} style={{ color: 'var(--color-primary-foreground)' }} />
       </button>
     </form>
   );

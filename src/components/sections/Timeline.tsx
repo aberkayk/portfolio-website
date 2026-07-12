@@ -32,14 +32,15 @@ export function Timeline() {
                   background: 'var(--color-surface-0)',
                   borderColor: i % 2 === 0 ? 'var(--color-primary)' : 'var(--color-accent)',
                   boxShadow: i % 2 === 0
-                    ? '0 0 8px rgba(55,138,221,0.5)'
-                    : '0 0 8px rgba(99,153,34,0.5)',
+                    ? '0 0 8px color-mix(in oklab, var(--color-primary) 50%, transparent)'
+                    : '0 0 8px color-mix(in oklab, var(--color-accent) 50%, transparent)',
                 }}
               />
             </div>
 
             {/* Content card */}
             <div
+              data-component="ExperienceCard"
               className="flex-1 rounded-[16px] p-5"
               style={{
                 background: 'var(--color-surface-1)',

@@ -28,31 +28,31 @@ Never hardcode a color value anywhere in the codebase: no hex codes, no `rgb()`/
 
 ```css
 @theme {
-  /* primary — blue */
-  --color-primary-100: #85B7EB;
-  --color-primary-300: #5A9EE0;
-  --color-primary: #378ADD;
-  --color-primary-700: #185FA5;
-  --color-primary-900: #0C447C;
+  /* primary — near-white, the brightest tone against the dark surfaces */
+  --color-primary-100: #FFFFFF;
+  --color-primary-300: #F2F2F2;
+  --color-primary: #E5E5E5;
+  --color-primary-700: #A3A3A3;
+  --color-primary-900: #737373;
 
-  /* accent — green */
-  --color-accent-100: #97C459;
-  --color-accent-300: #7BAE3E;
-  --color-accent: #639922;
-  --color-accent-700: #3B6D11;
-  --color-accent-900: #27500A;
+  /* accent — mid-gray, the second alternating tone (differs by lightness, not hue) */
+  --color-accent-100: #D4D4D4;
+  --color-accent-300: #B5B5B5;
+  --color-accent: #8C8C8C;
+  --color-accent-700: #616161;
+  --color-accent-900: #404040;
 
-  /* surfaces — dark, slightly blue-tinted neutral */
-  --color-surface-0: #0B0F14;
-  --color-surface-1: #131920;
-  --color-surface-2: #1B222B;
-  --color-border: #262E38;
+  /* surfaces — pure neutral black/gray (no hue tint) */
+  --color-surface-0: #0A0A0A;
+  --color-surface-1: #141414;
+  --color-surface-2: #1F1F1F;
+  --color-border: #2E2E2E;
 }
 ```
 
 Declaring these inside Tailwind v4's `@theme` block (rather than `:root`) makes them CSS variables *and* auto-generates matching utility classes (`bg-primary`, `text-primary-100`, `bg-surface-0`, `border-border`, ...) in one step — no separate config file needed.
 
-Usage: primary (blue) for buttons, chatbot bubbles, CTAs, links. Accent (green) for hover/active/success states and as the second alternating color in scroll reveals. Never introduce a third color into these interaction patterns — only primary and accent.
+Usage: this is a black-and-white theme — every value above is a neutral gray (R=G=B, zero hue). Primary (near-white) is for buttons, chatbot bubbles, CTAs, links — the brightest interactive tone. Accent (mid-gray) is for hover/active/success states and as the second alternating color in scroll reveals — distinguished from primary by lightness only, never by hue. Never introduce a hue-based third color into these interaction patterns — only primary and accent. The one intentional exception is `--color-destructive` (a semantic error/danger red, defined further down alongside the shadcn tokens) — kept in color so error states stay visually distinct; every other color in the codebase must be achromatic.
 
 ### Responsive design — mobile-first, always
 
@@ -78,10 +78,15 @@ scroll, before it's considered done — not as a later pass.
 ### Component conventions
 
 * All components are TypeScript strict mode with explicit prop types.
-* The chat component (`components/chat/Chat.tsx`) is a single component with two CSS states (hero-centered, widget-docked) driven by scroll — never split into two separate components, to avoid losing message/input state.
+* The chat component (`components/chat/Chat.tsx`) is a static section rendered in normal document flow directly below Hero, styled with plain Tailwind classes — no GSAP, no scroll-driven docking/minimizing.
 * `ProjectModal` must be generic and reusable via a `children` prop + `onClose`, since it will later host non-project content (see v2 note below).
 * Any scroll-linked animation goes through GSAP + ScrollTrigger with `scrub: true` and must be cleaned up on unmount. See the `gsap-scroll-animations` skill for the two established patterns (morph, staggered reveal).
 * Respect `prefers-reduced-motion`: every scroll animation needs a reduced-motion fallback (simple fade, no size/position/rotation transforms).
+
+## Workflow
+
+* **Don't run `pnpm build`, `pnpm lint`, or start a dev server / preview browser session after every change.** Apply the requested change and stop there — the user runs the build and does the testing themselves. Only build, lint, or open a preview if the user explicitly asks for it, or if you need it yourself mid-task to check a specific error (e.g. a TypeScript type you're unsure about) rather than as a final verification step.
+* This overrides the general default of verifying UI changes in a browser before reporting completion — that default does not apply in this project.
 
 ## Roadmap (see PLAN.md for details)
 

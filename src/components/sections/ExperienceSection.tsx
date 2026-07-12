@@ -2,11 +2,11 @@
 
 import { useRef } from 'react';
 import { Timeline } from './Timeline';
-import { useSectionReveal } from '@/hooks/useSectionReveal';
+import { useExperienceReveal } from '@/hooks/useExperienceReveal';
 
 export function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  useSectionReveal(sectionRef);
+  useExperienceReveal(sectionRef);
 
   return (
     <section

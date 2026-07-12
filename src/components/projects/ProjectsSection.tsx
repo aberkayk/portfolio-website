@@ -1,16 +1,22 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { useProjectsReveal } from '@/hooks/useProjectsReveal';
 import { OWNER_CONTEXT } from '@/lib/chat/context';
 
+const INITIAL_VISIBLE = 4;
+
 export function ProjectsSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const cardRefs = useRef<HTMLElement[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
-  useProjectsReveal(sectionRef, cardRefs);
+  const projects = showAll
+    ? OWNER_CONTEXT.projects
+    : OWNER_CONTEXT.projects.slice(0, INITIAL_VISIBLE);
+
+  useProjectsReveal(sectionRef, projects.length);
 
   return (
     <section
@@ -20,8 +26,7 @@ export function ProjectsSection() {
       className="py-20 px-6"
     >
       <div className="max-w-6xl mx-auto">
-        {/* Section header */}
-        <div className="flex items-end justify-between mb-12">
+        <div className="mb-12 flex items-end justify-between">
           <div>
             <div
               className="text-xs font-mono mb-2 tracking-widest"
@@ -43,18 +48,26 @@ export function ProjectsSection() {
           </a>
         </div>
 
-        {/* Cards grid — 2 columns on desktop, 1 on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {OWNER_CONTEXT.projects.map((project, index) => (
-            <ProjectCard
-              key={project.name}
-              ref={(el) => {
-                if (el) cardRefs.current[index] = el;
-              }}
-              project={project}
-            />
+        {/* Grid -- 1 column on mobile, 2 columns from md up. Each card slides
+            in from the left or right (alternating by index) as it scrolls
+            into view, see useProjectsReveal. */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+          {projects.map((project) => (
+            <ProjectCard key={project.name} project={project} />
           ))}
         </div>
+
+        {!showAll && OWNER_CONTEXT.projects.length > INITIAL_VISIBLE && (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="rounded-[10px] border border-border px-6 py-2.5 text-sm font-semibold font-heading text-foreground transition-colors duration-200 hover:bg-[color-mix(in_oklab,var(--color-foreground)_8%,transparent)]"
+            >
+              Load more
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

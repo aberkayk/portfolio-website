@@ -145,7 +145,14 @@ export function useChatMorph(
 
 Use when a group of elements should enter the viewport one after another, each from a different
 direction, tied to scroll progress through the section (bidirectional — scrolling back up reverses
-the reveal). Implement as `useProjectsReveal.ts` per `PLAN.md`.
+the reveal).
+
+> **Status in this project:** superseded for the projects section — `ProjectsSection` has gone
+> through a few iterations since (a shared group timeline, then per-card Pattern C reveals, then
+> a pinned full-screen crossfade) and currently uses Pattern D below (a horizontal, snap-to-card
+> carousel). This pattern is kept here as a reference for any future case where several elements
+> genuinely need to arrive together as one choreographed group (`useProjectsReveal.ts` no longer
+> exists in this codebase — treat the code below as a template, not a current file).
 
 Key properties:
 
@@ -224,9 +231,11 @@ export function useProjectsReveal(
 
 ## Pattern C — Fade + slide-up reveal (`toggleActions`, not `scrub`)
 
-Use when a whole section should discretely fade and slide into view once, the first time
-it's scrolled into the viewport (not continuously tied to scroll position like Pattern A/B).
-Implement as `useSectionReveal.ts` per `PLAN.md` Phase 5.
+Use when an element should discretely fade and slide into view as it's scrolled into the
+viewport (not continuously tied to scroll position like Pattern A/B). Implement as
+`useScrollReveal.ts` per `PLAN.md` Phase 5. Despite the original name (`useSectionReveal`),
+this hook takes a single element ref and is equally valid for a whole section (`ExperienceSection`,
+`SkillsSection`) or any other single element — hence the more generic name.
 
 Key properties:
 
@@ -239,6 +248,13 @@ Key properties:
 * `start: 'top 85%'` triggers a bit earlier than Pattern A/B's typical `'top 80%'`, since
   there's no morph/deal choreography to time precisely — just "become visible while mostly
   in view."
+* **Two modes, via a `reversible` option:** the default (`reversible: false`, `toggleActions:
+  'play none none none'`) plays once and stays visible — right for page sections that should
+  simply arrive and remain (`ExperienceSection`, `SkillsSection`). `reversible: true` adds an
+  `end` position and switches to `'play reverse play reverse'`, so the element also fades back
+  out on leaving the trigger zone (and back in on re-entering) — right for a sequence of large
+  stacked elements meant to appear and disappear one at a time as you scroll through them, one
+  hook instance per element rather than one shared trigger for the whole list.
 * Reduced-motion fallback: instant `opacity: 1`, no `y` offset at all — matching every
   other reduced-motion branch in this project.
 
@@ -251,7 +267,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export function useSectionReveal(sectionRef: RefObject<HTMLElement | null>) {
+interface UseScrollRevealOptions {
+  reversible?: boolean;
+}
+
+export function useScrollReveal(
+  sectionRef: RefObject<HTMLElement | null>,
+  options: UseScrollRevealOptions = {},
+) {
+  const { reversible = false } = options;
+
   useGSAP(() => {
     if (!sectionRef.current) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -271,11 +296,96 @@ export function useSectionReveal(sectionRef: RefObject<HTMLElement | null>) {
       scrollTrigger: {
         trigger: sectionRef.current,
         start: 'top 85%',
-        end: 'bottom 60%',
-        toggleActions: 'play reverse play reverse',
+        end: reversible ? 'bottom 60%' : undefined,
+        toggleActions: reversible ? 'play reverse play reverse' : 'play none none none',
       },
     });
   }, { scope: sectionRef });
+}
+```
+
+Note: `ExperienceSection` actually uses a sibling hook, `useExperienceReveal.ts`, which applies
+this same single-element pattern to each `[data-component="ExperienceCard"]` child with a
+left-to-right stagger — a small variation on Pattern C for a group of children inside one
+section, rather than the section itself. Follow the same key properties above; the difference
+is targeting `sectionRef.current.querySelectorAll(...)` instead of `sectionRef.current` itself.
+
+## Pattern D — Horizontal carousel (pin + translate the track, snap per card)
+
+Use when a horizontal row of items should scroll left-to-right as the user scrolls the page
+vertically, snapping to one item at a time — a scroll-jacked carousel. Implemented as
+`useProjectsCarousel.ts`, current behavior for `ProjectsSection`.
+
+Key properties:
+
+* Two elements, not one: an outer **pin container** (`overflow-hidden`, fixed viewport height)
+  and an inner **track** (a flex row, `width: max-content` so it isn't clamped to the pin
+  container's width, holding all the cards side by side, each with `flex-shrink: 0` so they
+  keep their intended size instead of getting squeezed to fit).
+* Animate the track's `x` (not `left`/`margin`) to translate it — a transform, cheap for the
+  compositor, per `gsap-performance`.
+* `x` and `end` are both **functions**, not plain numbers — `x: () => -getDistance()`,
+  `end: () => `+=${getDistance()}``, where `getDistance = () => track.scrollWidth -
+  pinEl.clientWidth`. Reading these live at every ScrollTrigger refresh (paired with
+  `invalidateOnRefresh: true`) means a window resize recalculates the correct travel distance
+  automatically, instead of freezing whatever the viewport happened to be at setup time.
+* `snap: 1 / (cardCount - 1)` snaps the scroll position to whichever card is nearest once the
+  user stops scrolling — one increment per card, evenly spaced across the whole trigger range.
+* `pin: true` on the same ScrollTrigger as the `x` tween — per `gsap-scrolltrigger`, pinning and
+  the tween driving the pinned content must live on the same top-level animation, never nested.
+* Because cards sit side by side (not stacked/overlapping like Pattern B), only the ones
+  currently scrolled into the pin container's visible bounds are naturally reachable/clickable
+  — no manual `pointer-events` bookkeeping needed, unlike an overlapping-card pattern would.
+* Reduced-motion fallback: skip the pin/scrub entirely and let a CSS override (see
+  `globals.css`'s `prefers-reduced-motion` block) force the track back to a plain stacked
+  `flex-direction: column` list, full width, no transform — a real layout change, not just an
+  animation skip, so it needs a CSS rule rather than only a JS branch.
+* Mobile: no pin at all (see the responsive rule below) — the track's own responsive classes
+  collapse to the same plain stacked column as the reduced-motion fallback.
+
+```tsx
+'use client';
+import { type RefObject } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+export function useProjectsCarousel(
+  pinRef: RefObject<HTMLElement | null>,
+  trackRef: RefObject<HTMLElement | null>,
+) {
+  useGSAP(() => {
+    const pinEl = pinRef.current;
+    const track = trackRef.current;
+    if (!pinEl || !track) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    const mm = gsap.matchMedia();
+
+    mm.add('(min-width: 768px)', () => {
+      const cardCount = track.children.length;
+      if (cardCount < 2) return;
+
+      const getDistance = () => track.scrollWidth - pinEl.clientWidth;
+
+      gsap.to(track, {
+        x: () => -getDistance(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: pinEl,
+          start: 'top top',
+          end: () => `+=${getDistance()}`,
+          scrub: 1,
+          pin: true,
+          invalidateOnRefresh: true,
+          snap: 1 / (cardCount - 1),
+        },
+      });
+    });
+  }, { scope: pinRef });
 }
 ```
 

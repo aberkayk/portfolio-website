@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-const NAV_LINKS = ["projects", "experience", "skills"] as const;
+const NAV_LINKS = ["chat", "projects", "experience", "skills", "contact"] as const;
 
 /* Inline SVGs for social icons not available in this lucide-react version */
 function GithubIcon({ size = 18 }: { size?: number }) {
@@ -34,6 +42,20 @@ function LinkedinIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+function InstagramIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6 6 0 100 12 6 6 0 000-12zm0 9.837a3.837 3.837 0 110-7.674 3.837 3.837 0 010 7.674zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  );
+}
+
 export function SiteHeader() {
   const [navOpen, setNavOpen] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -53,7 +75,16 @@ export function SiteHeader() {
   }, []);
 
   function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const el = document.getElementById(id);
+    if (el) {
+      // The chat panel is vertically centered within Hero (a tall section),
+      // so scrollIntoView's default top-alignment overshoots -- stop 100px
+      // short so some of Hero stays visible above it instead of landing
+      // right at the bottom edge.
+      const offset = id === "chat" ? 100 : 0;
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
     setNavOpen(false);
   }
 
@@ -67,11 +98,37 @@ export function SiteHeader() {
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="text-xl font-bold tracking-tight font-heading text-primary cursor-default select-none">
-          ABK
-          <span className="text-xs ml-1.5 font-medium text-muted-foreground">
-            dev
-          </span>
+        <div className="flex items-center gap-2 cursor-default select-none">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 32 32"
+            aria-hidden="true"
+            className="shrink-0"
+          >
+            <rect width="32" height="32" rx="7" fill="var(--color-surface-0)" />
+            <path
+              d="M8 18.5 L16 9.5 L24 18.5"
+              fill="none"
+              stroke="var(--color-primary-100)"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10.5 24.5 H21.5"
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="text-xl font-bold tracking-tight font-heading text-primary">
+            ABK
+            <span className="text-xs ml-1.5 font-medium text-muted-foreground">
+              dev
+            </span>
+          </div>
         </div>
 
         {/* Desktop nav */}
@@ -109,42 +166,58 @@ export function SiteHeader() {
             <LinkedinIcon size={18} />
           </a>
           <a
-            href="mailto:aberkayk@gmail.com"
-            id="hire-me-btn"
-            className="px-4 py-2 rounded-[10px] text-sm font-semibold font-heading text-primary-foreground bg-primary shadow-glow-primary hover:brightness-110 transition-all duration-200"
+            href="https://instagram.com/ahmettkocak"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram"
+            className="text-muted-foreground hover:text-primary transition-colors duration-200"
           >
-            Hire Me
+            <InstagramIcon size={18} />
+          </a>
+          <a
+            href="/cv-ahmet-berkay-kocak.pdf"
+            download
+            className="px-4 py-2 rounded-[10px] text-sm font-semibold font-heading text-foreground border border-border hover:bg-[color-mix(in_oklab,var(--color-foreground)_8%,transparent)] transition-colors duration-200"
+          >
+            Download CV
           </a>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          id="mobile-menu-toggle"
-          className="md:hidden bg-transparent border-none text-foreground cursor-pointer"
-          onClick={() => setNavOpen((v) => !v)}
-          aria-label="Toggle menu"
-        >
-          {navOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile menu */}
+        <Sheet open={navOpen} onOpenChange={setNavOpen}>
+          <SheetTrigger
+            render={
+              <button
+                id="mobile-menu-toggle"
+                className="md:hidden bg-transparent border-none text-foreground cursor-pointer"
+                aria-label="Toggle menu"
+              />
+            }
+          >
+            <Menu size={22} />
+          </SheetTrigger>
+          <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle>Menu</SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-1 px-4">
+              {NAV_LINKS.map((s) => (
+                <SheetClose
+                  key={s}
+                  render={
+                    <button
+                      onClick={() => scrollTo(s)}
+                      className="text-sm font-medium capitalize text-left py-2.5 text-muted-foreground bg-transparent border-none cursor-pointer hover:text-primary transition-colors duration-200"
+                    />
+                  }
+                >
+                  {s}
+                </SheetClose>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
       </div>
-
-      {/* Mobile menu */}
-      {navOpen && (
-        <div
-          className="md:hidden px-6 pb-4 flex flex-col gap-3"
-          style={{ borderTop: "1px solid var(--color-border)" }}
-        >
-          {NAV_LINKS.map((s) => (
-            <button
-              key={s}
-              onClick={() => scrollTo(s)}
-              className="text-sm font-medium capitalize text-left py-2 text-muted-foreground bg-transparent border-none cursor-pointer hover:text-primary transition-colors duration-200"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
     </header>
   );
 }

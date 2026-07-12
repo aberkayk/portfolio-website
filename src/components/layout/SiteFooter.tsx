@@ -1,3 +1,11 @@
+function InstagramIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6 6 0 100 12 6 6 0 000-12zm0 9.837a3.837 3.837 0 110-7.674 3.837 3.837 0 010 7.674zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  );
+}
+
 function GithubIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -17,6 +25,7 @@ function LinkedinIcon({ size = 16 }: { size?: number }) {
 const SOCIAL = [
   { Icon: GithubIcon, href: 'https://github.com/aberkayk', label: 'GitHub' },
   { Icon: LinkedinIcon, href: 'https://linkedin.com/in/ahmetberkaykocak', label: 'LinkedIn' },
+  { Icon: InstagramIcon, href: 'https://instagram.com/ahmettkocak', label: 'Instagram' },
 ];
 
 export function SiteFooter() {
@@ -26,10 +35,36 @@ export function SiteFooter() {
       style={{ borderTop: '1px solid var(--color-border)' }}
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="text-lg font-bold font-heading text-primary">ABK</div>
+        <div className="flex items-center gap-2">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 32 32"
+            aria-hidden="true"
+            className="shrink-0"
+          >
+            <rect width="32" height="32" rx="7" fill="var(--color-surface-0)" />
+            <path
+              d="M8 18.5 L16 9.5 L24 18.5"
+              fill="none"
+              stroke="var(--color-primary-100)"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10.5 24.5 H21.5"
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="text-lg font-bold font-heading text-primary">ABK</div>
+        </div>
 
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Ahmet Berkay Koçak — Built with Next.js &amp; passion
+          © {new Date().getFullYear()} Ahmet Berkay Koçak
         </p>
 
         <div className="flex items-center gap-4">

@@ -36,6 +36,25 @@ export function SuggestedPrompts({ ref, onSelect }: SuggestedPromptsProps) {
           {prompt}
         </button>
       ))}
+      <a
+        href="/cv-ahmet-berkay-kocak.pdf"
+        download
+        className="text-xs px-3 py-1.5 rounded-full text-muted-foreground transition-all duration-200 cursor-pointer"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--color-border)',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-primary)';
+          (e.currentTarget as HTMLAnchorElement).style.color = 'var(--color-primary)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-border)';
+          (e.currentTarget as HTMLAnchorElement).style.color = '';
+        }}
+      >
+        Download CV
+      </a>
     </div>
   );
 }

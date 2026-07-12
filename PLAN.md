@@ -98,7 +98,9 @@ Tasks:
 - [ ] Set up heading/body fonts via `next/font`
 - [ ] Apply large border-radius system-wide
 - [ ] Add soft colored glow shadows using the primary/accent variables
-- [ ] Add `ProjectCard` hover tilt effect (mouse-position based)
+- [x] ~~Add `ProjectCard` hover tilt effect (mouse-position based)~~ -- built, then
+      intentionally removed: cards should have no hover interaction, only the
+      scroll-driven crossfade transition (`useProjectsSlideshow`)
 - [ ] Add button press spring feedback
 - [ ] Add scroll-triggered fade+slide-up reveal for remaining sections
       (Experience, Skills) via GSAP `toggleActions`

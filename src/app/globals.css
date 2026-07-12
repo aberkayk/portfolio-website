@@ -3,28 +3,28 @@
 @import "shadcn/tailwind.css";
 
 @theme {
-  /* primary — blue */
-  --color-primary-100: #85b7eb;
-  --color-primary-300: #5a9ee0;
-  --color-primary: #378add;
-  --color-primary-700: #185fa5;
-  --color-primary-900: #0c447c;
+  /* primary — near-white, the brightest tone against the dark surfaces */
+  --color-primary-100: #ffffff;
+  --color-primary-300: #f2f2f2;
+  --color-primary: #e5e5e5;
+  --color-primary-700: #a3a3a3;
+  --color-primary-900: #737373;
 
-  /* accent — green */
-  --color-accent-100: #97c459;
-  --color-accent-300: #7bae3e;
-  --color-accent: #639922;
-  --color-accent-700: #3b6d11;
-  --color-accent-900: #27500a;
+  /* accent — mid-gray, the second alternating tone (differs by lightness, not hue) */
+  --color-accent-100: #d4d4d4;
+  --color-accent-300: #b5b5b5;
+  --color-accent: #8c8c8c;
+  --color-accent-700: #616161;
+  --color-accent-900: #404040;
 
-  /* surfaces — dark, slightly blue-tinted neutral */
-  --color-surface-0: #0b0f14;
-  --color-surface-1: #131920;
-  --color-surface-2: #1b222b;
-  --color-border: #262e38;
+  /* surfaces — pure neutral black/gray, matching the Hero background */
+  --color-surface-0: #0a0a0a;
+  --color-surface-1: #141414;
+  --color-surface-2: #1f1f1f;
+  --color-border: #2e2e2e;
 
   /* muted text */
-  --color-muted-text: #7a8899;
+  --color-muted-text: #8c8c8c;
 
   --font-heading: var(--font-heading-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body-sans), ui-sans-serif, system-ui, sans-serif;
@@ -36,7 +36,7 @@
 
   /* shadcn semantic tokens, derived from the palette above */
   --color-background: var(--color-surface-0);
-  --color-foreground: #e7ecf2;
+  --color-foreground: #f2f2f2;
   --color-card: var(--color-surface-1);
   --color-card-foreground: var(--color-foreground);
   --color-popover: var(--color-surface-1);
@@ -45,7 +45,7 @@
   --color-secondary: var(--color-surface-2);
   --color-secondary-foreground: var(--color-foreground);
   --color-muted: var(--color-surface-2);
-  --color-muted-foreground: #93a0ad;
+  --color-muted-foreground: #a3a3a3;
   --color-accent-foreground: var(--color-surface-0);
   --color-destructive: #c4453a;
   --color-destructive-foreground: var(--color-surface-0);
@@ -126,6 +126,21 @@
   50% {
     opacity: 0.4;
   }
+}
+
+@keyframes spotlight {
+  0% {
+    opacity: 0;
+    transform: translate(-72%, -62%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -40%) scale(1);
+  }
+}
+
+.animate-spotlight {
+  animation: spotlight 2s ease 0.5s forwards;
 }
 
 .animate-hero-mesh {

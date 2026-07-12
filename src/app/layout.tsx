@@ -15,7 +15,7 @@ const bodyFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ahmet Berkay Koçak — Frontend Engineer & Hybrid Athlete",
+  title: "Ahmet Berkay Koçak — Software Engineer & Hybrid Athlete",
   description:
     "Personal portfolio of Ahmet Berkay Koçak — full-stack software developer with 4+ years of experience and a hybrid athlete mindset.",
 };
