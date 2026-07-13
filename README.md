@@ -2,7 +2,7 @@
 
 Personal portfolio site with an AI chatbot as its centerpiece. Visitors can ask the chatbot about my background, skills, and projects, or just browse the site directly.
 
-**Live:** _not deployed yet_
+**Live:** [ahmetberkaykocak.com](https://ahmetberkaykocak.com)
 
 ## Highlights
 
